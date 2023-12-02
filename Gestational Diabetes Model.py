@@ -31,6 +31,7 @@ app.layout = html.Div(children=[
         ),
 
     html.Div(dcc.Graph(id='fig')),
+    html.Div(dcc.Graph(id='severeInteraction')),
 
     dbc.Row([
         dbc.Col([
@@ -59,16 +60,26 @@ app.layout = html.Div(children=[
     my_table := dash_table.DataTable(
         data = dff.to_dict('records'),
         columns=[{"name": i, "id": i} for i in dff.columns],
-        style_cell=({'textAlign':'left'}),
+        style_cell={
+            'textAlign': 'left', 
+            'minWidth': '200px', 
+            'width': '300px', 
+            'maxWidth': '1000px', 
+            'whiteSpace':'normal', 
+            'height':'auto', 
+            'lineHeight':'35px'},
         style_table={'overflowX': 'auto'},
         style_data={
             'whiteSpace': 'normal',
-            'minWidth': '100px', 
-            'width': '180px', 
-            'maxWidth': '180px',
+            'minWidth': '200px', 
+            'width': '300px', 
+            'maxWidth': '1000px',
             'height': 'auto',
         },
-        hidden_columns = ['Observed Drug-Drug Interaction']
+        hidden_columns = ['Observed Drug-Drug Interaction'],
+        css=[{
+            "selector": ".show-hide", 
+            "rule": "display: none"}]
     )
     ])
 ])
@@ -78,11 +89,22 @@ app.layout = html.Div(children=[
     Input('currInteraction', 'value')
 )
 
-def updateGraph(currInteraction):
+def updateMedicationGraph(currInteraction):
     temp = df.loc[df['Observed Drug-Drug Interaction'] == currInteraction]
     data = temp['Suspect Product Names']
-    fig = px.histogram(data, x = "Suspect Product Names")
+    fig = px.histogram(data, x = "Suspect Product Names", title = 'Cases of Patients that Used Drugs')
     return fig
+
+@callback(
+    Output('severeInteraction', 'figure'),
+    Input('currInteraction', 'value')
+)
+
+def updateSeverityGraph(currInteraction):
+    temp = df.loc[df['Observed Drug-Drug Interaction'] == currInteraction]
+    seriousData = temp['Serious']
+    severeInteraction = px.histogram(seriousData, x = "Serious", title = "Severity of Drug-Drug Interactions")
+    return severeInteraction
 
 @callback(
     Output(my_table, 'data'),
